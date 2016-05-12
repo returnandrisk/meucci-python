@@ -1,4 +1,4 @@
-# Python Code
+# Ports of Attilio Meucci's Matlab code to Python
 Some python code to share.
 
 # GNU General Public License
