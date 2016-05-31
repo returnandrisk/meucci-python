@@ -1,4 +1,4 @@
-# Python Code for Meucci Blog Posts
+# Python Code for Meucci Related Blog Posts
 Including my original code and some ports of Attilio Meucci's Matlab code.
 
 ## Instructions
