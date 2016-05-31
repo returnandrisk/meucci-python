@@ -1,5 +1,5 @@
 # Python Code for Meucci Blog Posts
-Including my original code and some ports of his Matlab code.
+Including my original code and some ports of Attilio Meucci's Matlab code.
 
 ## The MIT License (MIT)
 Copyright (c) 2016 Peter Chan (peter-at-return-and-risk-dot-com)
