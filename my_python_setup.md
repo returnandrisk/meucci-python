@@ -23,6 +23,13 @@ conda install -c quantopian pyfolio
 ## Python IDE
 Coming from a Matlab/R background, my favourite is spyder.
 
+To try it out, open a command prompt window and type in:
+
+activate py34
+
+spyder
+
+## Misc
 For writing blog posts and doing presentations, try using a Jupyter Notebook (you can also use it to develop and test code).
 
 To try it out, open a command prompt window and type in:
