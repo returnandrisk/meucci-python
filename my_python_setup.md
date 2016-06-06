@@ -20,6 +20,8 @@ conda install -c https://conda.anaconda.org/omnia cvxopt
 
 conda install -c quantopian pyfolio 
 
+conda install quandl
+
 ## Python IDE
 Coming from a Matlab/R background, my favourite is spyder.
 
