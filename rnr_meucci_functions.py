@@ -132,7 +132,67 @@ def TwoDimEllipsoid(Location, Square_Dispersion, Scale, PlotEigVectors, PlotSqua
         plt.plot([Start_A, End_A], [Start_B, End_B], color='r', linewidth=2)
 
     
+###############################################################################
+# Estimation
+###############################################################################
+def fp_mean_cov(x, p):
+    """
+    Computes the HFP-mean and HFP-covariance of the data in x 
+    """
+    # FP mean
+    if x.ndim == 1:
+        mu = np.average(x, axis=0, weights=p)
+    else:
+        mu = np.average(x, axis=1, weights=p)
+    # FP covariance
+    cov = np.cov(x, aweights=p, ddof=0)
+    return((mu, cov))
 
+import seaborn as sns
+def plot_corr_heatmap(corr, labels, heading):
+    
+    sns.set(style="white")
+    
+    # Generate a mask for the upper triangle
+    mask = np.zeros_like(corr, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
+    
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=(8, 8))
+    
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    
+    # Draw the heatmap with the mask and correct aspect ratio
+    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3,
+                square=True, xticklabels=labels, yticklabels=labels,
+                linewidths=.5, ax=ax, cbar_kws={"shrink": .5}, annot=True)
+    ax.set_title(heading)
+    plt.show()        
 
+def plot_2_corr_heatmaps(corr1, corr2, labels, title1, title2):
+    fig=plt.figure(figsize=(9, 8))
+    gs = gridspec.GridSpec(1, 2)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+    
+    sns.set(style="white")
+    
+    # Generate a mask for the upper triangle
+    mask = np.zeros_like(corr1, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
 
-
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    
+    # Draw the heatmap with the mask and correct aspect ratio
+    sns.heatmap(corr1, mask=mask, cmap=cmap, vmax=.3,
+                square=True, xticklabels=labels, yticklabels=labels,
+                linewidths=.5, ax=ax1, cbar_kws={"shrink": .3}, annot=True)
+    ax1.set_title(title1)
+    sns.heatmap(corr2, mask=mask, cmap=cmap, vmax=.3,
+                square=True, xticklabels=labels, yticklabels=labels,
+                linewidths=.5, ax=ax2, cbar_kws={"shrink": .3}, annot=True)
+    ax2.set_title(title2)
+    fig.tight_layout()
+    plt.show()
