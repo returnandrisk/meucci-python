@@ -9,6 +9,7 @@ Copyright (c) 2016  Peter Chan (peter-at-return-and-risk-dot-com)
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+import pandas as pd
 import matplotlib.gridspec as gridspec
 
 def IIDAnalysis(Data):
@@ -196,3 +197,37 @@ def plot_2_corr_heatmaps(corr1, corr2, labels, title1, title2):
     ax2.set_title(title2)
     fig.tight_layout()
     plt.show()
+
+###############################################################################
+# Attribution
+###############################################################################
+def factor_attribution(asset_rets, factor_rets, asset_weights, probs, N_factors):
+    # Ref: http://www.mathworks.com/matlabcentral/fileexchange/26853-factors-on-demand
+    # StatisticalVsCrossSectional > S_Main.m
+    port_rets = np.dot(asset_rets, asset_weights)
+    port_std = np.sqrt(np.cov(port_rets, aweights=probs, ddof=0))
+    # Notation: X = asset, Z = factor, P = portfolio, U = residual
+    # sigma2 = variance-covariance matrix
+    # sigma = covariance terms only
+    mu_PZ, sigma2_PZ = fp_mean_cov(np.concatenate((port_rets[:, None], factor_rets), axis=1).T, probs)
+    sigma_PZ = sigma2_PZ[0, 1:N_factors+1]
+    sigma2_Z = sigma2_PZ[1:N_factors+1, 1:N_factors+1]
+    # Compute OLS loadings for the linear return model
+    # Compute exposure i.e. beta
+    beta = np.dot(np.dot(sigma_PZ.T, sigma2_Z.T), np.linalg.inv(np.dot(sigma2_Z, sigma2_Z.T)))
+    mu_P = mu_PZ[0]
+    mu_Z = mu_PZ[1:N_factors+1]
+    alpha = mu_P - np.dot(beta, mu_Z)
+    # Compute residuals
+    U = port_rets - alpha - np.dot(factor_rets, beta)
+    # Compute risk contribution
+    mu_ZU, sigma2_ZU = fp_mean_cov(np.concatenate((factor_rets, U[:, None]), axis=1).T, probs)
+    beta_ = np.append(beta, 1)
+    vol_contr_Z = beta_ * np.dot(sigma2_ZU, beta_) / port_std
+    return(beta_, vol_contr_Z)
+    
+def plot_waterfall_chart(series, title):
+    df = pd.DataFrame({'pos':np.maximum(series,0),'neg':np.minimum(series,0)})
+    blank = series.cumsum().shift(1).fillna(0)
+    df.plot(kind='bar', stacked=True, bottom=blank, title=title, figsize=(9, 8)) 
+
