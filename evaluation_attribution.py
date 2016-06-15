@@ -94,7 +94,7 @@ print('Ex-ante satisfaction index : {:,.2%} (in % terms)'.format(-np.sqrt(sigma2
 # Set factors 
 factor_tickers = ['SPY', 'TLT', 'Residual']
 n_factor = 2
-# Calculate linear returns
+# Calculate linear returns - historical simulation
 asset_rets = np.array(prices.pct_change(tau).ix[tau:, asset_tickers]) 
 factor_rets = np.array(prices.pct_change(tau).ix[tau:, ['SPY', 'TLT']]) 
 #port_rets = pnl_portfolio / capital
@@ -105,11 +105,11 @@ port_std = np.sqrt(sigma2_port_e) / capital
 # Factor attribution exposures and risk contributions (using flexible probs)
 beta, vol_contr_Z = rnr.factor_attribution(asset_rets, factor_rets, asset_weights, exp_probs, n_factor)
 
-print('Factor exposure (beta):')
+print('Ex-ante factor exposure (beta):')
 for i, factor in enumerate(factor_tickers):
     print('\t\t{}:\t{:.2f}'.format(factor, beta[i]))
 print('')
-print('Ex-ante portfolio volatility over horizon = {:.2%}'.format(port_std))
+print('Ex-ante portfolio volatility = {:.2%}'.format(port_std))
 print('\tFactor risk contribution:')
 for j, factor in enumerate(factor_tickers):
     print('\t\t{}:\t{:.2%}'.format(factor, vol_contr_Z[j]))
