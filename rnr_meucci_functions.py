@@ -231,3 +231,86 @@ def plot_waterfall_chart(series, title):
     blank = series.cumsum().shift(1).fillna(0)
     df.plot(kind='bar', stacked=True, bottom=blank, title=title, figsize=(9, 8)) 
 
+###############################################################################
+# Construction
+###############################################################################
+def simple_shrinkage(mu, cov, mu_shrk_wt=0.1, cov_shrk_wt=0.1):
+    # Reference: Attilio Meucci's Matlab file S_MVHorizon.m
+    # https://www.mathworks.com/matlabcentral/fileexchange/25010-exercises-in-advanced-risk-and-portfolio-management
+    n_asset = len(mu)
+    
+    # Mean shrinkage 
+    Shrk_Exp = np.zeros(n_asset)
+    Exp_C_Hat = (1 - mu_shrk_wt) * mu + mu_shrk_wt * Shrk_Exp
+    
+    # Covariance shrinkage
+    Shrk_Cov = np.eye(n_asset) * np.trace(cov) / n_asset
+    Cov_C_Hat = (1-cov_shrk_wt) * cov + cov_shrk_wt * Shrk_Cov
+    
+    return((Exp_C_Hat, Cov_C_Hat))
+
+def efficient_frontier_qp_rets(n_portfolio, covariance, expected_values):
+    """
+    Port of Attilio Meucci's Matlab file EfficientFrontierQPRets.m
+    https://www.mathworks.com/matlabcentral/fileexchange/25010-exercises-in-advanced-risk-and-portfolio-management
+    This function returns the n_portfolio x 1 vector expected returns,
+                          the n_portfolio x 1 vector of volatilities and
+                          the n_portfolio x n_asset matrix of weights
+    of n_portfolio efficient portfolios whose expected returns are equally spaced along the whole range of the efficient frontier
+    """
+    import cvxopt as opt
+    from cvxopt import solvers, blas
+    
+    solvers.options['show_progress'] = False
+    n_asset = covariance.shape[0]
+    expected_values = opt.matrix(expected_values)
+    
+    # determine weights, return and volatility of minimum-risk portfolio
+    S = opt.matrix(covariance)
+    pbar = opt.matrix(np.zeros(n_asset)) 
+    # 1. positive weights
+    G = opt.matrix(0.0, (n_asset, n_asset))
+    G[::n_asset+1] = -1.0
+    h = opt.matrix(0.0, (n_asset, 1))
+    # 2. weights sum to one
+    A = opt.matrix(1.0, (1, n_asset))
+    b = opt.matrix(1.0)
+    x0 = opt.matrix(1 / n_asset * np.ones(n_asset))
+    min_x = solvers.qp(S, pbar, G, h, A, b, 'coneqp', x0)['x']
+    min_ret = blas.dot(min_x.T, expected_values)
+    min_vol = np.sqrt(blas.dot(min_x, S * min_x))
+    
+    # determine weights, return and volatility of maximum-risk portfolio
+    max_idx = np.asscalar(np.argmax(expected_values))
+    max_x = np.zeros(n_asset)
+    max_x[max_idx] = 1
+    max_ret = expected_values[max_idx]
+    max_vol = np.sqrt(np.dot(max_x, np.dot(covariance, max_x)))
+    
+    # slice efficient frontier returns into n_portfolio segments
+    target_rets = np.linspace(min_ret, max_ret, n_portfolio).tolist()
+    
+    # compute the n_portfolio weights and risk-return coordinates of the optimal allocations for each slice
+    weights = np.zeros((n_portfolio, n_asset))
+    rets = np.zeros(n_portfolio)
+    vols = np.zeros(n_portfolio)
+    # start with min vol portfolio
+    weights[0,:] = np.asarray(min_x).T
+    rets[0] = min_ret
+    vols[0] = min_vol
+    
+    for i in range(1, n_portfolio-1):
+        # determine least risky portfolio for given expected return
+        A = opt.matrix(np.vstack([np.ones(n_asset), expected_values.T]))
+        b = opt.matrix(np.hstack([1, target_rets[i]]))
+        x = solvers.qp(S, pbar, G, h, A, b, 'coneqp', x0)['x']    
+        weights[i,:] = np.asarray(x).T
+        rets[i] = blas.dot(x.T, expected_values)
+        vols[i] = np.sqrt(blas.dot(x, S * x))    
+    
+    # add max ret portfolio
+    weights[n_portfolio-1,:] = np.asarray(max_x).T
+    rets[n_portfolio-1] = max_ret
+    vols[n_portfolio-1] = max_vol
+    
+    return(weights, rets, vols)
