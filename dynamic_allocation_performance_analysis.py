@@ -115,8 +115,6 @@ if __name__ == '__main__':
     print('Getting Yahoo data for 30 DJIA stocks and DIA ETF as benchmark...')
     data = load_bars_from_yahoo(stocks=tickers, start=start, end=end)
     # Check price data
-    fig = plt.figure()
-    fig.subplots_adjust(right=0.75)
     data.loc[:, :, 'price'].plot(figsize=(8,7), title='Input Price Data')
     plt.ylabel('price in $');
     plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
