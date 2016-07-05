@@ -314,3 +314,23 @@ def efficient_frontier_qp_rets(n_portfolio, covariance, expected_values):
     vols[n_portfolio-1] = max_vol
     
     return(weights, rets, vols)
+
+###############################################################################
+# Dynamic Allocation
+###############################################################################
+from zipline.utils.tradingcalendar import get_trading_days
+from datetime import datetime
+import pytz
+
+def get_num_days_nxt_month(month, year):
+    """
+    Inputs: today's month number and year number
+    Output: number of trading days in the following month
+    """
+    nxt_month = month + 1 if month < 12 else 1
+    _year = year if nxt_month != 1 else year + 1
+    start = datetime(_year, nxt_month, 1, tzinfo=pytz.utc)
+    end = datetime(_year if nxt_month != 12 else _year + 1, nxt_month + 1 if nxt_month != 12 else 1, 1, tzinfo=pytz.utc)
+    return(len(get_trading_days(start, end)))
+    
+
